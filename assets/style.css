@@ -1,0 +1,207 @@
+/* ============================================================
+   AI Ping Pong — Design System & Layout
+   ============================================================ */
+
+/* --- Reset & Base --- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Palette */
+  --bg-primary:    hsl(230, 25%, 6%);
+  --bg-secondary:  hsl(230, 20%, 10%);
+  --bg-surface:    hsl(230, 18%, 13%);
+  --border-subtle: hsl(230, 15%, 18%);
+  --text-primary:  hsl(0, 0%, 92%);
+  --text-secondary:hsl(230, 10%, 55%);
+  --accent:        hsl(165, 80%, 48%);
+  --accent-glow:   hsla(165, 80%, 48%, 0.35);
+  --danger:        hsl(0, 72%, 56%);
+  --canvas-bg:     hsl(230, 22%, 8%);
+
+  /* Typography */
+  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* Spacing */
+  --gap-xs: 0.25rem;
+  --gap-sm: 0.5rem;
+  --gap-md: 1rem;
+  --gap-lg: 1.5rem;
+  --gap-xl: 2.5rem;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- App Shell --- */
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-lg);
+  padding: var(--gap-xl) var(--gap-md);
+  width: 100%;
+  max-width: 900px;
+}
+
+/* --- Header --- */
+#header {
+  text-align: center;
+}
+
+#title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+#title .accent {
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-glow);
+}
+
+#subtitle {
+  margin-top: var(--gap-xs);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Game Container --- */
+#game-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  width: 100%;
+}
+
+/* --- Scoreboard --- */
+#scoreboard {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gap-lg);
+  padding: var(--gap-sm) var(--gap-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.score-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 80px;
+}
+
+.score-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.score-value {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.score-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border-subtle);
+}
+
+/* --- Canvas --- */
+#canvas-wrapper {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 0 0 1px hsla(230, 15%, 18%, 0.5),
+    0 8px 30px hsla(230, 40%, 4%, 0.6),
+    0 0 60px -10px var(--accent-glow);
+  background: var(--canvas-bg);
+  line-height: 0; /* remove inline spacing under canvas */
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: none;
+}
+
+/* --- Status Bar --- */
+#status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--gap-xs) var(--gap-sm);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+#fps-counter {
+  opacity: 0.6;
+}
+
+#game-status {
+  opacity: 0.6;
+}
+
+/* --- Footer --- */
+#footer {
+  text-align: center;
+}
+
+#footer p {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* --- Responsive --- */
+@media (max-width: 860px) {
+  #app {
+    padding: var(--gap-lg) var(--gap-sm);
+  }
+
+  #title {
+    font-size: 1.4rem;
+  }
+}

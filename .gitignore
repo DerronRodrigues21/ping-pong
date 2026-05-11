@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+training/.git/
+
+training/saved_model/
+training/reward_curve.png
+training/winrate_curve.png
+training/loss_curve.png
