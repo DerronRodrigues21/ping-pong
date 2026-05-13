@@ -1,7 +1,13 @@
 # AI Ping Pong
 
-A browser Pong game powered by a DQN agent trained offline in Python and exported
-to TensorFlow.js for inference.
+A browser Pong game powered by a DQN agent trained offline in Python and exported to TensorFlow.js for inference.
+
+## Features
+
+* **Difficulty Options:** Choose between Easy (5k episodes), Medium (8k episodes), and Impossible (Mathematically perfect tracking logic).
+* **Serving System:** Proper table tennis serve rules (2 serves each, alternate every point at 10-10). Allows the player to aim their serve.
+* **Keyboard Controls:** Use `ArrowUp` and `ArrowDown` to move your paddle, `Space` to launch a serve, and `K` to ready the AI's serve.
+* **Cross-Platform Training:** Automatic device selection for PyTorch (`cuda` for Windows/Linux GPUs, `mps` for Mac Apple Silicon, falling back to `cpu`).
 
 ## Project Layout
 
@@ -10,49 +16,46 @@ to TensorFlow.js for inference.
 ├── index.html              # Browser entrypoint
 ├── app/                    # Canvas game and TF.js inference code
 ├── assets/                 # CSS and static presentation assets
-├── model/                  # Exported TensorFlow.js model used by the browser
+├── model/                  # Exported TensorFlow.js models (easy, medium, impossible)
 ├── training/               # Python DQN training and export pipeline
 └── vercel.json             # Static hosting config
 ```
 
 ## Run The Game
 
+Start a local web server from the project root:
+
 ```bash
-python3 -m http.server 8000
+python -m http.server 8080
 ```
 
-Open:
+Open your browser to:
 
 ```text
-http://localhost:8000
+http://localhost:8080
 ```
 
-The status bar should show `DQN Model Active` when `model/model.json` loads.
-
-## Train
+## Train & Export
 
 Install Python dependencies:
 
 ```bash
-pip3 install -r training/requirements.txt
+pip install -r training/requirements.txt
 ```
 
-Resume from the included checkpoint:
+Train a new model from scratch:
 
 ```bash
-python3 training/train.py --resume training/checkpoints/ep_005000.pt --epsilon 0.2
-```
-
-For faster iteration, skip export while training:
-
-```bash
-python3 training/train.py --resume training/checkpoints/ep_005000.pt --epsilon 0.2 --no-export
+python training/train.py
 ```
 
 Export a checkpoint for the browser:
+We use a script to export the different models into the specific difficulty directories.
 
 ```bash
-python3 training/export.py training/checkpoints/ep_005000.pt
+python training/export_all.py
 ```
+
+*(If you only want to export a single checkpoint, you can use `python training/export.py <checkpoint_path>` and manually move it into the appropriate difficulty folder).*
 
 More training details are in [training/README.md](training/README.md).
