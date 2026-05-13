@@ -30,8 +30,6 @@ export const ACTION = Object.freeze({
 /** Number of discrete actions (matches the model's output layer). */
 export const NUM_ACTIONS = 3;
 
-/** Path to the pre-trained model directory (relative to index.html). */
-const MODEL_PATH = './model/model.json';
 const PADDLE_HEIGHT_RATIO = 100 / 500;
 
 export class AIAgent {
@@ -54,7 +52,7 @@ export class AIAgent {
    * Attempt to load the pre-trained model.
    * Gracefully falls back to heuristic mode if the model is missing.
    */
-  async init() {
+  async init(difficulty = 'medium') {
     // Check if TensorFlow.js is available
     if (typeof tf === 'undefined') {
       this.status = 'Heuristic — TF.js not loaded';
@@ -63,8 +61,9 @@ export class AIAgent {
     }
 
     try {
-      this.status = 'Loading model…';
-      this._model = await tf.loadLayersModel(MODEL_PATH);
+      const modelPath = `./model/${difficulty}/model.json`;
+      this.status = `Loading ${difficulty} model…`;
+      this._model = await tf.loadLayersModel(modelPath);
       this.modelLoaded = true;
       this.status = 'DQN Model Active';
       console.info('[AIAgent] Pre-trained model loaded successfully.');

@@ -22,10 +22,11 @@ LOG_INTERVAL = 100
 SAVE_INTERVAL = 1000
 CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoints")
 PLOTS_DIR = os.path.dirname(__file__)
-MAX_STEPS_PER_EP = 10_000  # safety cap
+MAX_STEPS_PER_EP = 2_000  # safety cap; shorter episodes train much faster
 LEARNING_STARTS = 1_000
-TRAIN_EVERY = 4
+TRAIN_EVERY = 8
 LOSS_LOG_EVERY = 20
+TRAIN_WIN_SCORE = 3
 
 
 def _episode_from_checkpoint(path):
@@ -34,10 +35,21 @@ def _episode_from_checkpoint(path):
     return int(match.group(1)) if match else 0
 
 
-def train(resume_path=None, epsilon_override=None):
+def train(
+    resume_path=None,
+    epsilon_override=None,
+    episodes=NUM_EPISODES,
+    max_steps_per_ep=MAX_STEPS_PER_EP,
+    win_score=TRAIN_WIN_SCORE,
+    train_every=TRAIN_EVERY,
+    learning_starts=LEARNING_STARTS,
+    log_interval=LOG_INTERVAL,
+    save_interval=SAVE_INTERVAL,
+    export=True,
+):
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-    env = PongEnv()
+    env = PongEnv(win_score=win_score)
     agent = DQNAgent()
     start_ep = 1
 
@@ -53,6 +65,7 @@ def train(resume_path=None, epsilon_override=None):
     # Metrics accumulators
     ep_rewards = []
     ep_wins = []
+    ep_steps = []
     ep_losses_vals = []
     avg_rewards_log = []
     avg_winrate_log = []
@@ -64,20 +77,28 @@ def train(resume_path=None, epsilon_override=None):
     t_start = time.time()
     total_steps = 0
 
-    for ep in range(start_ep, NUM_EPISODES + 1):
+    print(
+        "Training config: "
+        f"episodes={episodes}, win_score={win_score}, "
+        f"max_steps={max_steps_per_ep}, train_every={train_every}"
+    )
+
+    for ep in range(start_ep, episodes + 1):
         state = env.reset()
         total_reward = 0.0
         ep_loss = []
         info = {}
+        episode_steps = 0
 
-        for step in range(MAX_STEPS_PER_EP):
+        for step in range(max_steps_per_ep):
             action = agent.select_action(state)
             next_state, reward, done, info = env.step(action)
             total_steps += 1
+            episode_steps += 1
 
             agent.store(state, action, reward, next_state, done)
-            if total_steps >= LEARNING_STARTS and total_steps % TRAIN_EVERY == 0:
-                should_log_loss = total_steps % LOSS_LOG_EVERY == 0
+            if total_steps >= learning_starts and total_steps % train_every == 0:
+                should_log_loss = total_steps % (LOSS_LOG_EVERY * train_every) == 0
                 loss = agent.train_step(return_loss=should_log_loss)
                 if loss is not None:
                     ep_loss.append(loss)
@@ -95,14 +116,16 @@ def train(resume_path=None, epsilon_override=None):
         agent.decay_epsilon()
         ep_rewards.append(total_reward)
         ep_wins.append(1.0 if info.get("winner") == "ai" else 0.0)
+        ep_steps.append(episode_steps)
         if ep_loss:
             ep_losses_vals.append(np.mean(ep_loss))
 
         # --- Logging ---
-        if ep % LOG_INTERVAL == 0:
-            avg_r = np.mean(ep_rewards[-LOG_INTERVAL:])
-            avg_w = np.mean(ep_wins[-LOG_INTERVAL:]) * 100
-            avg_l = np.mean(ep_losses_vals[-LOG_INTERVAL:]) if ep_losses_vals else 0.0
+        if ep % log_interval == 0:
+            avg_r = np.mean(ep_rewards[-log_interval:])
+            avg_w = np.mean(ep_wins[-log_interval:]) * 100
+            avg_steps = np.mean(ep_steps[-log_interval:])
+            avg_l = np.mean(ep_losses_vals[-log_interval:]) if ep_losses_vals else 0.0
             avg_q = agent.avg_q(np.array(recent_states[-200:], dtype=np.float32)) if recent_states else 0.0
 
             avg_rewards_log.append(avg_r)
@@ -115,39 +138,41 @@ def train(resume_path=None, epsilon_override=None):
             steps_per_sec = total_steps / elapsed
 
             print(
-                f"Ep {ep:>6d}/{NUM_EPISODES} | "
+                f"Ep {ep:>6d}/{episodes} | "
                 f"Reward: {avg_r:>7.2f} | "
                 f"Win%: {avg_w:>5.1f}% | "
                 f"Loss: {avg_l:.4f} | "
                 f"AvgQ: {avg_q:.3f} | "
                 f"Eps: {agent.epsilon:.4f} | "
+                f"Steps/ep: {avg_steps:.0f} | "
                 f"{eps_per_sec:.1f} ep/s | "
                 f"{steps_per_sec:.0f} steps/s"
             )
 
         # --- Checkpoint ---
-        if ep % SAVE_INTERVAL == 0:
+        if ep % save_interval == 0:
             path = os.path.join(CHECKPOINT_DIR, f"ep_{ep:06d}.pt")
             agent.save(path, episode=ep)
             print(f"  → Checkpoint saved: {path}")
 
     # --- Final save ---
     final_path = os.path.join(CHECKPOINT_DIR, "final.pt")
-    agent.save(final_path, episode=NUM_EPISODES)
+    agent.save(final_path, episode=episodes)
     print(f"\n✓ Training complete. Final checkpoint: {final_path}")
 
     # --- Plots ---
-    _save_plots(avg_rewards_log, avg_winrate_log, avg_loss_log)
+    _save_plots(avg_rewards_log, avg_winrate_log, avg_loss_log, log_interval)
 
     # --- Auto-export ---
-    print("\n→ Exporting to TensorFlow.js...")
-    from export import export_to_tfjs
-    export_to_tfjs(final_path)
+    if export:
+        print("\n→ Exporting to TensorFlow.js...")
+        from export import export_to_tfjs
+        export_to_tfjs(final_path)
 
 
-def _save_plots(rewards, winrates, losses):
+def _save_plots(rewards, winrates, losses, log_interval=LOG_INTERVAL):
     """Generate and save training curves."""
-    x = [i * LOG_INTERVAL for i in range(1, len(rewards) + 1)]
+    x = [i * log_interval for i in range(1, len(rewards) + 1)]
 
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(x, rewards, linewidth=0.8, color="#4fc3f7")
@@ -194,5 +219,24 @@ if __name__ == "__main__":
         type=float,
         help="Optional epsilon override when resuming, e.g. 0.2",
     )
+    parser.add_argument("--episodes", type=int, default=NUM_EPISODES)
+    parser.add_argument("--max-steps", type=int, default=MAX_STEPS_PER_EP)
+    parser.add_argument("--win-score", type=int, default=TRAIN_WIN_SCORE)
+    parser.add_argument("--train-every", type=int, default=TRAIN_EVERY)
+    parser.add_argument("--learning-starts", type=int, default=LEARNING_STARTS)
+    parser.add_argument("--log-interval", type=int, default=LOG_INTERVAL)
+    parser.add_argument("--save-interval", type=int, default=SAVE_INTERVAL)
+    parser.add_argument("--no-export", action="store_true", help="Skip TF.js export after training.")
     args = parser.parse_args()
-    train(resume_path=args.resume, epsilon_override=args.epsilon)
+    train(
+        resume_path=args.resume,
+        epsilon_override=args.epsilon,
+        episodes=args.episodes,
+        max_steps_per_ep=args.max_steps,
+        win_score=args.win_score,
+        train_every=args.train_every,
+        learning_starts=args.learning_starts,
+        log_interval=args.log_interval,
+        save_interval=args.save_interval,
+        export=not args.no_export,
+    )

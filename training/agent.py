@@ -21,10 +21,16 @@ def get_device():
         if requested == "mps" and not torch.backends.mps.is_available():
             print("[DQNAgent] DQN_DEVICE=mps requested, but MPS is unavailable; using CPU")
             return torch.device("cpu")
+        if requested == "cuda" and not torch.cuda.is_available():
+            print("[DQNAgent] DQN_DEVICE=cuda requested, but CUDA is unavailable; using CPU")
+            return torch.device("cpu")
         return torch.device(requested)
 
-    # This model and batch size are small enough that MPS dispatch/sync overhead
-    # is usually slower than CPU on Apple Silicon.
+    # Auto-detect best device
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return torch.device("mps")
     return torch.device("cpu")
 
 

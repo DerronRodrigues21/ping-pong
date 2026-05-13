@@ -43,6 +43,12 @@ Resume from the included checkpoint:
 python3 training/train.py --resume training/checkpoints/ep_005000.pt --epsilon 0.2
 ```
 
+For faster iteration, skip export while training:
+
+```bash
+python3 training/train.py --resume training/checkpoints/ep_005000.pt --epsilon 0.2 --no-export
+```
+
 Export a checkpoint for the browser:
 
 ```bash

@@ -32,6 +32,19 @@
 
       <div id="canvas-wrapper">
         <canvas id="game-canvas"></canvas>
+        <div id="start-screen" class="overlay">
+          <h2>Select AI Difficulty</h2>
+          <div class="difficulty-buttons">
+            <button data-level="easy">Easy (5k eps)</button>
+            <button data-level="medium">Medium (8k eps)</button>
+            <button data-level="impossible">Impossible (50k eps)</button>
+          </div>
+        </div>
+        <div id="serve-overlay" class="overlay hidden">
+          <h2 id="serve-message">Player's Serve</h2>
+          <button id="ready-button" class="hidden">Ready (K)</button>
+          <p id="serve-hint" class="hidden">Move paddle to aim, then Click/Space to serve</p>
+        </div>
       </div>
 
       <div id="status-bar">

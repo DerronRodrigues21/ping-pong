@@ -205,3 +205,54 @@ body {
     font-size: 1.4rem;
   }
 }
+
+/* --- Overlays --- */
+.overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: hsla(230, 25%, 6%, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gap-lg);
+  z-index: 10;
+  transition: opacity 0.3s;
+}
+.overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.overlay h2 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.difficulty-buttons {
+  display: flex;
+  gap: var(--gap-md);
+}
+.difficulty-buttons button, #ready-button {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.difficulty-buttons button:hover, #ready-button:hover {
+  background: var(--border-subtle);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+#serve-hint {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.hidden {
+  display: none !important;
+}

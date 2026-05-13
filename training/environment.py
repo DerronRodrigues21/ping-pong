@@ -34,9 +34,10 @@ WIN_SCORE = 11
 class PongEnv:
     """OpenAI-gym-style interface: reset() → state, step(action) → (state, reward, done, info)."""
 
-    def __init__(self):
+    def __init__(self, win_score=WIN_SCORE):
         self.state_dim = 6
         self.action_dim = 3
+        self.win_score = win_score
         self.reset()
 
     # ------------------------------------------------------------------
@@ -170,9 +171,10 @@ class PongEnv:
     def _check_game_over(self):
         hi = max(self.ai_score, self.opp_score)
         lo = min(self.ai_score, self.opp_score)
-        if hi < WIN_SCORE:
+        if hi < self.win_score:
             return False
-        return (hi - lo >= 2) if (self.ai_score >= 10 and self.opp_score >= 10) else True
+        deuce_at = self.win_score - 1
+        return (hi - lo >= 2) if (self.ai_score >= deuce_at and self.opp_score >= deuce_at) else True
 
     # ------------------------------------------------------------------
     # Opponent AI (rule-based)
